@@ -1,13 +1,13 @@
 #!/bin/bash
 
-git submodule init
 git submodule sync
-git submodule update
+git submodule update --init --recursive
+git submodule update --remote --force
 
 PROJ_DIR="$(pwd)"
 
 # local.conf won't exist until this step on first execution
-source poky/oe-init-build-env ../build_rpi
+source poky/oe-init-build-env build_rpi
 echo "Current path is: $(pwd)"
 
 check_and_add_conf_line() {
@@ -152,6 +152,8 @@ if [ "$TERGET_IMAGE" != "core-image-picam" ]; then
     echo "${CONFLINE} already exists in the local.conf file"
   fi
 fi
+
+check_and_add_conf_line "INHERIT += \"rm_work\""
 
 echo "Current path is: $(pwd)"
 echo "Building $TERGET_IMAGE..."

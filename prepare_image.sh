@@ -8,10 +8,10 @@ IMAGE_NAME="core-image-picam"
 # We then manipulate the path to get to the 'deploy-core-image-picam-image-complete' directory.
 DEPLOY_DIR=$(bitbake -e "${IMAGE_NAME}" | grep ^D= | sed 's/^D="//;s/"$//')
 
-if [ -z "${DEPLOY_DIR}" ]; then
-    echo "Error: Could not determine deployment directory for ${IMAGE_NAME}."
-    exit 1
-fi
+#if [ -z "${DEPLOY_DIR}" ]; then
+#    echo "Error: Could not determine deployment directory for ${IMAGE_NAME}."
+#    exit 1
+#fi
 
 # Adjust the DEPLOY_DIR to point to the 'deploy-core-image-picam-image-complete' directory
 # This assumes a standard Yocto build structure.
@@ -22,7 +22,8 @@ fi
 BASE_PATH=$(echo "${DEPLOY_DIR}" | sed 's/\/image$//')
 
 # Construct the full deploy-complete directory path
-DEPLOY_COMPLETE_DIR="${BASE_PATH}/deploy-${IMAGE_NAME}-image-complete"
+#DEPLOY_COMPLETE_DIR="${BASE_PATH}/deploy-${IMAGE_NAME}-image-complete"
+DEPLOY_COMPLETE_DIR="/home/ed/workspace/final-project-eduardpo/build_rpi/tmp/deploy/images/raspberrypi4-64"
 
 if [ ! -d "${DEPLOY_COMPLETE_DIR}" ]; then
     echo "Error: Deployment complete directory not found: ${DEPLOY_COMPLETE_DIR}"
