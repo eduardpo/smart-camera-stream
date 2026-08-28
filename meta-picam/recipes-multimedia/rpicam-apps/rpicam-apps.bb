@@ -1,3 +1,15 @@
+# ==============================================================================
+# File:        rpicam-apps.bb
+# Summary:     add Raspberry Pi camera applications (formerly libcamera-apps) to the image for Raspberry Pi with camera support
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
+#
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 SUMMARY = "Raspberry Pi camera applications using libcamera"
 DESCRIPTION = "Official Raspberry Pi camera apps (formerly libcamera-apps), built on top of libcamera."
 HOMEPAGE = "https://github.com/raspberrypi/rpicam-apps"

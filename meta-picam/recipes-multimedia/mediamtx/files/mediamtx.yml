@@ -1,0 +1,33 @@
+# --- RTSP (Keep this on for pir-mqtt backend) ---
+rtsp: yes
+rtspTransports: [tcp]
+rtspAddress: :8554
+
+# --- WebRTC (Turn this on for real-time web viewing) ---
+webrtc: yes
+webrtcAddress: :8889
+webrtcEncryption: no      # Set to yes if accessing outside your local home LAN
+webrtcICEServers:
+    - "stun:stun.l.google.com:19302"
+
+# --- Everything else off to save RAM/CPU ---
+rtmp: no
+hls: no
+srt: no
+
+# --- Paths ---
+paths:
+  cam:
+    source: rpiCamera
+    sourceOnDemand: no
+
+    # FIX 1: Drop the resolution slightly to save encoding memory bandwidth
+    rpiCameraWidth: 1280
+    rpiCameraHeight: 720
+
+    # FIX 2: Lower the frame rate to drop the hardware workload by half
+    rpiCameraFPS: 15
+
+    # FIX 3: Force a modern profile configuration that browsers handle flawlessly
+    rpiCameraProfile: main
+    rpiCameraBitrate: 1500000

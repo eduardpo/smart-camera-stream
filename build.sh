@@ -1,14 +1,33 @@
+# ==============================================================================
+# File:        build.sh
+# Summary:     This script automates the setup and build process for a Yocto Project environment, 
+#              specifically targeting Raspberry Pi 4 (64-bit) using the meta-picam layer. 
+#              It initializes git submodules, configures local.conf with necessary settings, 
+#              adds required layers, and finally builds the specified image.
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
+#
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 #!/bin/bash
 
 git submodule sync
 git submodule update --init --recursive
 git submodule update --remote --force
 
+# Use pecific commit
+git -C meta-openembedded checkout --force f8dddbf
+
 PROJ_DIR="$(pwd)"
 
 # local.conf won't exist until this step on first execution
 source poky/oe-init-build-env build_rpi
 echo "Current path is: $(pwd)"
+
 
 check_and_add_conf_line() {
   local CONFLINE="$1"
@@ -28,86 +47,30 @@ CONFLINE="MACHINE = \"raspberrypi4-64\""
 #CONFLINE="MACHINE = \"raspberrypi4\""
 check_and_add_conf_line "${CONFLINE}"
 
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
+# Forces BitBake to handle downloads on non-POSIX filesystems smoothly
+BB_STRICT_CHECKSUM = "0"
+# Fixes SQLite database locking issues on NTFS mounts
+BB_SIGNATURE_HANDLER = "OEBasicHash"
+# Bypass strict NTFS permission checks inside Docker
+check_and_add_conf_line "export CCACHE_PERMISSIONS_CHECK_BYPASS = \"1\""
 
+# Enable ccache for your recipes
+check_and_add_conf_line "INHERIT += \"ccache\""
+# yocto cache for docker compose.yml
+check_and_add_conf_line "DL_DIR = \"/downloads\""
+check_and_add_conf_line "CCACHE_TOPDIR = \"/ccache\""
+check_and_add_conf_line "export CCACHE_DIR = \"/ccache\""
 
-CONFLINE="DL_DIR = \"$(pwd)/../downloads/\""
-check_and_add_conf_line "${CONFLINE}"
+# 4-CORE & 16GB RAM PERFORMANCE OPTIMIZATION
+check_and_add_conf_line "BB_NUMBER_THREADS = \"4\""
+check_and_add_conf_line "PARALLEL_MAKE = \"-j 4\""
 
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
-
-
-CONFLINE="INIT_MANAGER = \"systemd\""
-check_and_add_conf_line "${CONFLINE}"
-
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
-
-CONFLINE="DISTRO_FEATURES:append = \" systemd\""
-check_and_add_conf_line "${CONFLINE}"
-
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
-
-CONFLINE="VIRTUAL-RUNTIME_init_manager = \"systemd\""
-check_and_add_conf_line "${CONFLINE}"
-
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
-
-CONFLINE="LICENSE_FLAGS_ACCEPTED = \"commercial\""
-check_and_add_conf_line "${CONFLINE}"
-
-# cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-# local_conf_info=$?
-# if [ $local_conf_info -ne 0 ];then
-# 	echo "Append ${CONFLINE} in the local.conf file"
-# 	echo ${CONFLINE} >> conf/local.conf
-# else
-# 	echo "${CONFLINE} already exists in the local.conf file"
-# fi
-
-# bitbake-layers show-layers | grep "meta-aesd" > /dev/null
-# layer_info=$?
-
-# if [ $layer_info -ne 0 ];then
-# 	echo "Adding meta-aesd layer"
-# 	bitbake-layers add-layer ../meta-aesd
-# else
-# 	echo "meta-aesd layer already exists"
-# fi
+check_and_add_conf_line "INIT_MANAGER = \"systemd\""
+check_and_add_conf_line "DISTRO_FEATURES:append = \" systemd\""
+check_and_add_conf_line "VIRTUAL-RUNTIME_init_manager = \"systemd\""
+check_and_add_conf_line "LICENSE_FLAGS_ACCEPTED = \"commercial synaptics-killswitch\""
+check_and_add_conf_line "EXTRA_IMAGE_FEATURES += \"ssh-server-dropbear\""
+check_and_add_conf_line "INHERIT += \"rm_work\""
 
 declare -a layer_specs=(
   "meta-openembedded/meta-oe|$PROJ_DIR/meta-openembedded/meta-oe"
@@ -132,25 +95,9 @@ done
 #TERGET_IMAGE=core-image-minimal
 #TERGET_IMAGE=core-image-base
 TERGET_IMAGE=core-image-picam
-#TERGET_IMAGE=core-image-aesd
 
 if [ $# -gt 0 ]; then
   TERGET_IMAGE="$1"
-fi
-
-# add EXTRA_IMAGE_FEATURES here only for NOT CUSTOM images
-if [ "$TERGET_IMAGE" != "core-image-picam" ]; then
-  CONFLINE="EXTRA_IMAGE_FEATURES += \"ssh-server-dropbear\""
-  cat conf/local.conf | grep "${CONFLINE}" > /dev/null
-  local_conf_info=$?
-
-  if [ $local_conf_info -ne 0 ];then
-    echo "Append ${CONFLINE} in the local.conf file"
-    echo ${CONFLINE} >> conf/local.conf
-    
-  else
-    echo "${CONFLINE} already exists in the local.conf file"
-  fi
 fi
 
 check_and_add_conf_line "INHERIT += \"rm_work\""

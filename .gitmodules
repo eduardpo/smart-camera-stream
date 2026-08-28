@@ -2,11 +2,13 @@
 	path = meta-openembedded
 	url = https://git.openembedded.org/meta-openembedded
 	branch = kirkstone
+
 [submodule "meta-raspberrypi"]
 	path = meta-raspberrypi
 	url = https://git.yoctoproject.org/git/meta-raspberrypi
 	branch = kirkstone
+
 [submodule "poky"]
 	path = poky
-	url = git://git.yoctoproject.org/poky
+	url = https://git.yoctoproject.org/poky
 	branch = kirkstone

@@ -1,16 +1,38 @@
+# ==============================================================================
+# File:        pir-mqtt_1.0.bbappend
+# Summary:     add pir-mqtt motion alert application to the image for Raspberry Pi with camera support
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
+#
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 ESCRIPTION = "PIR-MQTT Motion alert with GStreamer and OpenCV"
 LICENSE = "MIT"
 LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda2f7b4f302"
 
-SRC_URI = "git://github.com/eduardpo/motion-stream.git;protocol=https;branch=master \
-           file://pir-mqtt.service \
-           file://config.ini \
-"
 
-# Use AUTOREV to always get the latest commit from the specified branch
-SRCREV = "${AUTOREV}"
+# SRC_URI = "git://github.com/eduardpo/motion-stream.git;protocol=https;branch=master \
+#            file://pir-mqtt.service \
+#            file://config.ini \
+# "
 
-S = "${WORKDIR}/git"
+
+# # Use AUTOREV to always get the latest commit from the specified branch
+# SRCREV = "${AUTOREV}"
+
+# S = "${WORKDIR}/git"
+
+FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
+
+SRC_URI += " file://pir-mqtt.service \
+            file://config.ini \
+            file://pir_mqtt.cpp"
+
+S = "${WORKDIR}"
 
 DEPENDS = "mosquitto libgpiod gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly opencv"
 

@@ -23,7 +23,7 @@ BASE_PATH=$(echo "${DEPLOY_DIR}" | sed 's/\/image$//')
 
 # Construct the full deploy-complete directory path
 #DEPLOY_COMPLETE_DIR="${BASE_PATH}/deploy-${IMAGE_NAME}-image-complete"
-DEPLOY_COMPLETE_DIR="/home/ed/workspace/final-project-eduardpo/build_rpi/tmp/deploy/images/raspberrypi4-64"
+DEPLOY_COMPLETE_DIR="./tmp/deploy/images/raspberrypi4-64"
 
 if [ ! -d "${DEPLOY_COMPLETE_DIR}" ]; then
     echo "Error: Deployment complete directory not found: ${DEPLOY_COMPLETE_DIR}"

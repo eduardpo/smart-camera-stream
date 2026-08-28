@@ -1,3 +1,15 @@
+# ==============================================================================
+# File:        meson_0.64.1.bbappend
+# Summary:     add meson build system to the image for Raspberry Pi with camera support
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
+#
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 SUMMARY = "Meson build system"
 HOMEPAGE = "https://mesonbuild.com/"
 LICENSE = "Apache-2.0"

@@ -1,3 +1,15 @@
+# ==============================================================================
+# File:        wpa-supplicant_%.bbappend
+# Summary:     install wpa_supplicant.conf into /etc/wpa_supplicant and enable systemd service for wlan0
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
+#
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += "file://wpa_supplicant.conf"

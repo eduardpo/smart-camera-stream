@@ -1,0 +1,28 @@
+[Unit]
+Description=MediaMTX RTSP media server
+# Wait for the network AND the Linux hardware device manager (udev) to settle
+After=network-online.target udev.service multi-user.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+ExecStartPre=/bin/sleep 3
+WorkingDirectory=/tmp
+ExecStart=/usr/bin/mediamtx /etc/mediamtx.yml
+Restart=always
+# A 5-second window prevents port 8554 bind address collisions
+RestartSec=5
+
+KillMode=control-group
+SendSIGKILL=yes
+TimeoutStopSec=5
+
+NoNewPrivileges=true
+ProtectSystem=strict
+ProtectHome=true
+PrivateTmp=true
+ReadWritePaths=/tmp
+
+[Install]
+# Explicitly ties the activation layout to the main system runlevel
+WantedBy=multi-user.target

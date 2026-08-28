@@ -1,0 +1,11 @@
+[Unit]
+Description=MQTT Motion Stream
+After=graphical-session.target network.target
+
+[Service]
+ExecStart=/usr/bin/python3 /usr/local/bin/mqtt_motion_stream.py
+WorkingDirectory=/usr/local/bin
+Restart=always
+
+[Install]
+WantedBy=default.target

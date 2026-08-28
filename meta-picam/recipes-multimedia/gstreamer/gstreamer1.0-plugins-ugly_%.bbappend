@@ -1,8 +1,14 @@
-# d@DellEdi:~/workspace/build_rpi$ cat /home/ed/workspace/build_rpi/tmp/work/cortexa72-poky-linux/gstreamer1.0-plugins-ugly/1.20.7-r0/temp/log.do_configure | grep x264
-# NOTE: Executing meson -Dnls=enabled -Dgpl=enabled -Ddoc=disabled -Dsidplay=disabled -Da52dec=enabled -Damrnb=disabled -Damrwbdec=disabled -Dcdio=disabled -Ddvdread=disabled -Dmpeg2dec=enabled -Dorc=enabled -Dx264=disabled...
-# Dependency x264 skipped: feature x264 disabled
-#     x264                  : disabled
-# ed@DellEdi:~/workspace/build_rpi
+# ==============================================================================
+# File:        gstreamer1.0-plugins-ugly_%.bbappend
+# Summary:     Enable the x264 software encoder plugin for gstreamer-ugly
+# Author:      Eduard Polyakov <eduardpo@gmail.com>
+# Date:        2026-08-27
+# Version:     1.0.0
 #
+# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
+# Licensed under the MIT License.
+# ==============================================================================
+
+
 # Force the x264 plugin to be compiled in:
 PACKAGECONFIG:append = " x264"

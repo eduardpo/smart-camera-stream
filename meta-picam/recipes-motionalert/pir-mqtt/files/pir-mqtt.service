@@ -1,10 +1,14 @@
 [Unit]
 Description=PIR MQTT Motion Alert
-After=network.target
+# Wants= is safe; if pir-mqtt crashes, mediamtx will remain completely unaffected
+After=network.target mediamtx.service multi-user.target
+Wants=mediamtx.service
 
 [Service]
 ExecStart=/usr/bin/pir_mqtt -c /etc/pir_mqtt/config.ini
-Restart=on-failure
+Restart=always
+# Increase the backoff delay to 10 seconds to allow MediaMTX to fully settle its sockets
+RestartSec=10
 User=root
 
 [Install]
