@@ -1,0 +1,11 @@
+#!/bin/sh
+
+set -eu
+
+if [ "$(id -u)" -eq 0 ]; then
+    uid="${USER_ID:-1000}"
+    gid="${GROUP_ID:-1000}"
+    exec setpriv --reuid "$uid" --regid "$gid" --clear-groups kas "$@"
+fi
+
+exec kas "$@"

@@ -1,0 +1,54 @@
+header:
+  version: 14
+
+machine: raspberrypi4-64
+distro: poky
+target:
+  - core-image-picam
+
+repos:
+  smart-camera-stream:
+    path: .
+    layers:
+      meta-picam: null
+
+  poky:
+    url: https://git.yoctoproject.org/git/poky
+    branch: kirkstone
+    layers:
+      meta: null
+      meta-poky: null
+      meta-yocto-bsp: null
+
+  meta-openembedded:
+    url: https://github.com/openembedded/meta-openembedded.git
+    commit: f8dddbf
+    layers:
+      meta-oe: null
+      meta-python: null
+      meta-multimedia: null
+      meta-networking: null
+
+  meta-raspberrypi:
+    url: https://github.com/agherzan/meta-raspberrypi.git
+    branch: kirkstone
+    
+local_conf_header:
+  smart-camera-stream: |
+    BB_STRICT_CHECKSUM = "0"
+    BB_SIGNATURE_HANDLER = "OEBasicHash"
+    MACHINE = "raspberrypi4-64"
+    export CCACHE_PERMISSIONS_CHECK_BYPASS = "1"
+    INHERIT += "ccache"
+    DL_DIR = "/downloads"
+    CCACHE_TOPDIR = "/ccache"
+    export CCACHE_DIR = "/ccache"
+    BB_NUMBER_THREADS = "4"
+    PARALLEL_MAKE = "-j 4"
+    INIT_MANAGER = "systemd"
+    DISTRO_FEATURES:append = " systemd"
+    VIRTUAL-RUNTIME_init_manager = "systemd"
+    IMAGE_FEATURES += "ssh-server-openssh"
+    EXTRA_IMAGE_FEATURES += "debug-tweaks"
+    LICENSE_FLAGS_ACCEPTED = "commercial synaptics-killswitch"
+    INHERIT += "rm_work"
