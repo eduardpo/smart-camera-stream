@@ -1,7 +1,7 @@
 [Unit]
 Description=PIR MQTT Motion Alert
 # Wants= is safe; if pir-mqtt crashes, mediamtx will remain completely unaffected
-After=network.target mediamtx.service multi-user.target
+After=network.target mediamtx.service
 Wants=mediamtx.service
 
 [Service]

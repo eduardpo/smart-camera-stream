@@ -57,6 +57,7 @@
 #include <chrono>
 #include <ctime>
 #include <iomanip> // for std::put_time
+#include <memory>
 #include <thread>
 #include <sys/socket.h>
 #include <netinet/in.h>
@@ -360,47 +361,91 @@ private:
 };
 
 // ---------------------------------------------------------------------------
-// Backend: PIR sensor on GPIO (libgpiod v1.x API -- kirkstone ships 1.6.3)
+// Backend: PIR sensor on GPIO (libgpiod v2 API)
 // ---------------------------------------------------------------------------
 void run_pir_motion_detection() {
-    struct gpiod_chip *chip = gpiod_chip_open("/dev/gpiochip0");
+    auto chip = std::unique_ptr<gpiod_chip, decltype(&gpiod_chip_close)>(
+        gpiod_chip_open("/dev/gpiochip0"), &gpiod_chip_close);
     if (!chip) {
         log_event("Failed to open /dev/gpiochip0");
         running = false;
         return;
     }
 
-    struct gpiod_line *line = gpiod_chip_get_line(chip, gpio_line);
-    if (!line) {
-        log_event("Failed to get GPIO" + std::to_string(gpio_line) + " line handle");
-        gpiod_chip_close(chip);
+    auto settings = std::unique_ptr<gpiod_line_settings, decltype(&gpiod_line_settings_free)>(
+        gpiod_line_settings_new(), &gpiod_line_settings_free);
+    if (!settings ||
+        gpiod_line_settings_set_direction(settings.get(), GPIOD_LINE_DIRECTION_INPUT) != 0 ||
+        gpiod_line_settings_set_edge_detection(settings.get(), GPIOD_LINE_EDGE_BOTH) != 0) {
+        log_event("Failed to configure GPIO" + std::to_string(gpio_line) + " line settings");
         running = false;
         return;
     }
 
-    if (gpiod_line_request_both_edges_events(line, "pir_mqtt") != 0) {
+    auto line_config = std::unique_ptr<gpiod_line_config, decltype(&gpiod_line_config_free)>(
+        gpiod_line_config_new(), &gpiod_line_config_free);
+    const unsigned int line_offset = static_cast<unsigned int>(gpio_line);
+    if (!line_config ||
+        gpiod_line_config_add_line_settings(line_config.get(), &line_offset, 1, settings.get()) != 0) {
+        log_event("Failed to configure GPIO" + std::to_string(gpio_line) + " line");
+        running = false;
+        return;
+    }
+
+    auto request_config = std::unique_ptr<gpiod_request_config, decltype(&gpiod_request_config_free)>(
+        gpiod_request_config_new(), &gpiod_request_config_free);
+    if (!request_config) {
+        log_event("Failed to create GPIO request configuration");
+        running = false;
+        return;
+    }
+    gpiod_request_config_set_consumer(request_config.get(), "pir_mqtt");
+
+    auto request = std::unique_ptr<gpiod_line_request, decltype(&gpiod_line_request_release)>(
+        gpiod_chip_request_lines(chip.get(), request_config.get(), line_config.get()),
+        &gpiod_line_request_release);
+    if (!request) {
         log_event("Failed to request GPIO" + std::to_string(gpio_line) + " for edge events");
-        gpiod_chip_close(chip);
         running = false;
         return;
     }
 
-    struct gpiod_line_event event;
+    auto event_buffer = std::unique_ptr<gpiod_edge_event_buffer, decltype(&gpiod_edge_event_buffer_free)>(
+        gpiod_edge_event_buffer_new(1), &gpiod_edge_event_buffer_free);
+    if (!event_buffer) {
+        log_event("Failed to create GPIO edge event buffer");
+        running = false;
+        return;
+    }
+
     log_event("PIR motion detection started on GPIO" + std::to_string(gpio_line));
 
     MotionSessionTracker tracker;
 
     while (running) {
-        struct timespec timeout = {0, 100000000}; // 100 ms
-        int ret = gpiod_line_event_wait(line, &timeout);
+        int ret = gpiod_line_request_wait_edge_events(request.get(), 100000000);
+        if (ret < 0) {
+            log_event("Failed waiting for GPIO" + std::to_string(gpio_line) + " edge events");
+            running = false;
+            break;
+        }
 
         if (ret == 1) {
-            if (gpiod_line_event_read(line, &event) == 0 &&
-                event.event_type == GPIOD_LINE_EVENT_RISING_EDGE) {
-                tracker.on_edge();
+            ret = gpiod_line_request_read_edge_events(request.get(), event_buffer.get(), 1);
+            if (ret < 0) {
+                log_event("Failed reading GPIO" + std::to_string(gpio_line) + " edge event");
+                running = false;
+                break;
             }
-        } else if (ret < 0) {
-            log_event("GPIO edge wait error");
+
+            if (ret > 0) {
+                struct gpiod_edge_event *event =
+                    gpiod_edge_event_buffer_get_event(event_buffer.get(), 0);
+                if (event &&
+                    gpiod_edge_event_get_event_type(event) == GPIOD_EDGE_EVENT_RISING_EDGE) {
+                    tracker.on_edge();
+                }
+            }
         }
 
         tracker.tick();
@@ -410,8 +455,7 @@ void run_pir_motion_detection() {
         mosquitto_loop_read(mosq, 1);
     }
 
-    gpiod_line_release(line);
-    gpiod_chip_close(chip);
+
     log_event("PIR motion detection stopped. Total accepted edges: " + std::to_string(tracker.edge_count()));
 }
 
@@ -499,7 +543,7 @@ std::string build_opencv_gst_pipeline(const std::string &rtsp_url) {
     std::string common_tail =
         " ! videoscale ! video/x-raw, width=640, height=480 "
         "! videoconvert ! video/x-raw, format=BGR "
-        "! appsink drop=true max-buffers=1 sync=false";
+        "! appsink name=appsink drop=true max-buffers=1 sync=false";
 
     if (opencv_dec == "hw") {
         return common_head + "v4l2h264dec qos=false" + common_tail;

@@ -6,7 +6,7 @@ IMAGE_NAME="core-image-picam"
 # --- Get the deployment directory ---
 # This command extracts the 'D' variable which contains the path to the image directory.
 # We then manipulate the path to get to the 'deploy-core-image-picam-image-complete' directory.
-DEPLOY_DIR=$(bitbake -e "${IMAGE_NAME}" | grep ^D= | sed 's/^D="//;s/"$//')
+#DEPLOY_DIR=$(bitbake -e "${IMAGE_NAME}" | grep ^D= | sed 's/^D="//;s/"$//')
 
 #if [ -z "${DEPLOY_DIR}" ]; then
 #    echo "Error: Could not determine deployment directory for ${IMAGE_NAME}."

@@ -24,15 +24,13 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 # # Use AUTOREV to always get the latest commit from the specified branch
 # SRCREV = "${AUTOREV}"
 
-# S = "${WORKDIR}/git"
-
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += " file://pir-mqtt.service \
             file://config.ini \
             file://pir_mqtt.cpp"
 
-S = "${WORKDIR}"
+S = "${UNPACKDIR}"
 
 DEPENDS = "mosquitto libgpiod gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly opencv"
 
@@ -41,15 +39,15 @@ do_compile() {
     export PKG_CONFIG_SYSROOT_DIR="${STAGING_DIR_HOST}"
     export PKG_CONFIG_PATH="${STAGING_DIR_HOST}${libdir}/pkgconfig:${STAGING_DIR_HOST}${datadir}/pkgconfig"
 
-    ${CXX} ${S}/pir_mqtt.cpp -o pir_mqtt \
+    ${CXX} ${CXXFLAGS} ${S}/pir_mqtt.cpp -o pir_mqtt \
         $(pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 opencv4) \
-        -lmosquitto -lgpiod -Wl,--hash-style=gnu
+        -lmosquitto -lgpiod -Wl,--hash-style=gnu ${LDFLAGS}
 }
 
 do_install() {
     install -Dm755 pir_mqtt ${D}${bindir}/pir_mqtt
-    install -Dm644 ${WORKDIR}/pir-mqtt.service ${D}${systemd_system_unitdir}/pir-mqtt.service
-    install -Dm644 ${WORKDIR}/config.ini ${D}${sysconfdir}/pir_mqtt/config.ini
+    install -Dm644 ${S}/pir-mqtt.service ${D}${systemd_system_unitdir}/pir-mqtt.service
+    install -Dm644 ${S}/config.ini ${D}${sysconfdir}/pir_mqtt/config.ini
 }
 
 

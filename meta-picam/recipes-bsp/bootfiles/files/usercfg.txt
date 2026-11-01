@@ -3,4 +3,4 @@ gpu_mem=128
 dtoverlay=imx219
 dtparam=i2c_vc=on
 dtparam=i2c_arm=on
-camera_auto_detect=1
+camera_auto_detect=0

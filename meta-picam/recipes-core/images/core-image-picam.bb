@@ -1,54 +1,49 @@
-# ==============================================================================
-# File:        core-image-picam.bbappend
-# Summary:     create and image for Raspberry Pi with camera support
-# Author:      Eduard Polyakov <eduardpo@gmail.com>
-# Date:        2026-08-27
-# Version:     1.0.0
-#
-# Copyright (c) 2026 Eduard Polyakov. All rights reserved.
-# Licensed under the MIT License.
-# ==============================================================================
-
-
-DESCRIPTION = "Custom image for RPi4 with libcamera, GStreamer, OpenCV, Wi-Fi, SSH"
+SUMMARY = "Minimal headless camera stream image for Raspberry Pi 4"
+DESCRIPTION = "Production-ready headless Wrynose image containing camera and network stack."
 LICENSE = "MIT"
 
-inherit core-image
+# 1. Base Strategy: Safely pull in the core-image-minimal base
+require recipes-core/images/core-image-minimal.bb
 
-IMAGE_INSTALL += " \
+# 2. Package Installation: Strict modern override syntax
+IMAGE_INSTALL:append = " \
     libcamera \
+    libcamera-gst \
     v4l-utils \
     gstreamer1.0 \
     gstreamer1.0-plugins-base \
+    gstreamer1.0-plugins-base-app \
+    gstreamer1.0-plugins-base-videoconvertscale \
     gstreamer1.0-plugins-good \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
+    gstreamer1.0-libav \
+    x264 \
     openssh \
     iw \
+    kernel-module-brcmfmac-cyw \
+    kernel-module-brcmfmac \
+    kernel-module-bcm2835-isp \
+    kernel-module-bcm2835-unicam-legacy \
+    kernel-module-i2c-mux-pinctrl \
+    linux-firmware-rpidistro-bcm43455 \
     wpa-supplicant \
     opencv \
     mosquitto \
+    mosquitto-clients \
     libgpiod \
     pir-mqtt \
     rpicam-apps \
     i2c-tools \
+    mediamtx \
+    tcpdump \
 "
 
-# SYSTEMD_AUTO_ENABLE:pn-wpa-supplicant = "enable"
+# 3. Defensive Isolation: Hard block graphics at the image level
+IMAGE_FEATURES:remove = "x11-base x11 wayland splashvulkan"
 
-# x264
-IMAGE_INSTALL += "x264 libcamera-gst"
-
-# The correct recipe name for Kirkstone software decoders):
-#IMAGE_INSTALL += "gst-libav"
-IMAGE_INSTALL += "gstreamer1.0-libav"
-
-# RTSP server (Go-based, MediaMTX) - pir-mqtt pushes its motion stream into
-# this locally (127.0.0.1:8554/cam); the PC pulls it over the network.
-IMAGE_INSTALL += "mediamtx"
-
-# debugging tools
-IMAGE_INSTALL += " mosquitto mosquitto-clients"
-IMAGE_INSTALL += " tcpdump"
-
-IMAGE_BOOT_FILES += "bootfiles/*"
+# 4. Modern Dependency Pruning
+BAD_RECOMMENDATIONS += " \
+    udev-extraconf \
+    gstreamer1.0-plugins-base-apps \
+"

@@ -1,7 +1,7 @@
 [Unit]
 Description=MediaMTX RTSP media server
 # Wait for the network AND the Linux hardware device manager (udev) to settle
-After=network-online.target udev.service multi-user.target
+After=network-online.target udev.service
 Wants=network-online.target
 
 [Service]

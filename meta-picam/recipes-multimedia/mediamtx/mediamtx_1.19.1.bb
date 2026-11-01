@@ -43,14 +43,9 @@ MEDIAMTX_SHA256:arm = "052654f2268ad0604f2bb277e417cf3c122d7399f814e6d1ca2dbcf18
 
 SRC_URI[sha256sum] = "${MEDIAMTX_SHA256}"
 
-# The release tarball is flat: mediamtx, mediamtx.yml, LICENSE (no subdirectory).
-# NOTE: don't be tempted to use ${UNPACKDIR} here even though it exists on
-# scarthgap. On this release the do_unpack[cleandirs] default (an anonymous
-# python snippet in base.bbclass) doesn't reliably have UNPACKDIR populated
-# yet when it evaluates S, which throws "Directory name ${@d.getVar('S')
-# contains unexpanded bitbake variable" at do_unpack time. WORKDIR is the
-# correct/working choice on scarthgap; revisit only if you upgrade past it.
-S = "${WORKDIR}"
+# The release tarball and file:// assets are flat, so use the unpack directory
+# directly as the source directory.
+S = "${UNPACKDIR}"
 
 inherit systemd
 
@@ -62,10 +57,10 @@ do_install() {
     install -m 0755 ${S}/mediamtx ${D}${bindir}/mediamtx
 
     install -d ${D}${sysconfdir}
-    install -m 0644 ${WORKDIR}/mediamtx.yml ${D}${sysconfdir}/mediamtx.yml
+    install -m 0644 ${S}/mediamtx.yml ${D}${sysconfdir}/mediamtx.yml
 
     install -d ${D}${systemd_system_unitdir}
-    install -m 0644 ${WORKDIR}/mediamtx.service ${D}${systemd_system_unitdir}/mediamtx.service
+    install -m 0644 ${S}/mediamtx.service ${D}${systemd_system_unitdir}/mediamtx.service
 }
 
 FILES:${PN} += "${systemd_system_unitdir}/mediamtx.service"

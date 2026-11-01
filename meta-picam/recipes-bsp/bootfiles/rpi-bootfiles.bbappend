@@ -22,5 +22,5 @@ SRC_URI += "file://usercfg.txt"
 # no package, so anything written under do_install's ${D} never reaches the
 # card regardless of path.
 do_deploy:append() {
-    install -Dm0644 ${WORKDIR}/usercfg.txt ${DEPLOYDIR}/${BOOTFILES_DIR_NAME}/usercfg.txt
+    install -Dm0644 ${UNPACKDIR}/usercfg.txt ${DEPLOYDIR}/${BOOTFILES_DIR_NAME}/usercfg.txt
 }

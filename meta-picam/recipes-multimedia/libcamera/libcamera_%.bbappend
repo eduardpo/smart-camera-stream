@@ -1,6 +1,6 @@
 # ==============================================================================
-# File:        gstreamer1.0-plugins-bad_%.bbappend
-# Summary:     Enable the libcamerasrc plugin from gstreamer-bad
+# File:        libcamera_%.bbappend
+# Summary:     add libcamera framework to the image for Raspberry Pi with camera support
 # Author:      Eduard Polyakov <eduardpo@gmail.com>
 # Date:        2026-08-27
 # Version:     1.0.0
@@ -10,7 +10,9 @@
 # ==============================================================================
 
 
-# Enable the libcamerasrc plugin from gstreamer-bad
-PACKAGECONFIG:append = " libcamera"
+PACKAGECONFIG:append = " gst"
 
-DEPENDS += "libcamera"
+# GStreamer plugin runtime dependencies (minimal and correct)
+RDEPENDS:${PN}-gst += " \
+    gstreamer1.0-plugins-base \
+"
