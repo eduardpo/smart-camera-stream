@@ -18,7 +18,9 @@ srt: no
 # --- Paths ---
 paths:
   cam:
+    # --- Force hardware H264 encoding, possible options are hardwareH264, softwareH264, auto ---
     source: rpiCamera
+    rpiCameraCodec: hardwareH264
     sourceOnDemand: no
 
     # FIX 1: Drop the resolution slightly to save encoding memory bandwidth

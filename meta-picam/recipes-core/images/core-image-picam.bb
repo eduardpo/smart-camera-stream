@@ -15,6 +15,7 @@ IMAGE_INSTALL:append = " \
     gstreamer1.0-plugins-base-app \
     gstreamer1.0-plugins-base-videoconvertscale \
     gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-good-video4linux2 \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
@@ -23,12 +24,14 @@ IMAGE_INSTALL:append = " \
     iw \
     kernel-module-brcmfmac-cyw \
     kernel-module-brcmfmac \
+    kernel-module-bcm2835-codec \
     kernel-module-bcm2835-isp \
     kernel-module-bcm2835-unicam-legacy \
     kernel-module-i2c-mux-pinctrl \
     linux-firmware-rpidistro-bcm43455 \
     wpa-supplicant \
     opencv \
+    libopencv-dnn \
     mosquitto \
     mosquitto-clients \
     libgpiod \
