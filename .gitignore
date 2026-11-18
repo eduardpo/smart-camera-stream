@@ -1,4 +1,7 @@
-build
 .vscode
+!.vscode/
+.vscode/*
+!.vscode/c_cpp_properties.json
+!.vscode/extensions.json
 valgrind-out.txt
 test.sh.log

@@ -27,27 +27,34 @@ LIC_FILES_CHKSUM = "file://${COMMON_LICENSE_DIR}/MIT;md5=0835ade698e0bcf8506ecda
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 
 SRC_URI += " file://pir-mqtt.service \
+            file://pir-mqtt-time-sync.service \
             file://config.ini \
-            file://pir_mqtt.cpp"
+            file://pir_mqtt.cpp \
+            file://camera_analytics.cpp \
+            file://pir_mqtt.hpp \
+            file://yolo11n.onnx"
 
 S = "${UNPACKDIR}"
 
-DEPENDS = "mosquitto libgpiod gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly opencv"
+DEPENDS = "mosquitto libgpiod gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good opencv"
 
 
 do_compile() {
     export PKG_CONFIG_SYSROOT_DIR="${STAGING_DIR_HOST}"
     export PKG_CONFIG_PATH="${STAGING_DIR_HOST}${libdir}/pkgconfig:${STAGING_DIR_HOST}${datadir}/pkgconfig"
 
-    ${CXX} ${CXXFLAGS} ${S}/pir_mqtt.cpp -o pir_mqtt \
-        $(pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 opencv4) \
+    # Keep capture/analytics separate in source while linking one daemon.
+    ${CXX} ${CXXFLAGS} ${S}/pir_mqtt.cpp ${S}/camera_analytics.cpp -o pir_mqtt \
+        $(pkg-config --cflags --libs gstreamer-1.0 gstreamer-app-1.0 gstreamer-video-1.0 opencv4) \
         -lmosquitto -lgpiod -Wl,--hash-style=gnu ${LDFLAGS}
 }
 
 do_install() {
     install -Dm755 pir_mqtt ${D}${bindir}/pir_mqtt
     install -Dm644 ${S}/pir-mqtt.service ${D}${systemd_system_unitdir}/pir-mqtt.service
+    install -Dm644 ${S}/pir-mqtt-time-sync.service ${D}${systemd_system_unitdir}/pir-mqtt-time-sync.service
     install -Dm644 ${S}/config.ini ${D}${sysconfdir}/pir_mqtt/config.ini
+    install -Dm644 ${S}/yolo11n.onnx ${D}${datadir}/pir-mqtt/yolo11n.onnx
 }
 
 
@@ -63,7 +70,7 @@ SYSTEMD_PACKAGES = "${PN}"
 
 # List the systemd service file(s) that should be enabled by default.
 # This ensures that 'systemctl enable pir-mqtt-alert.service' is run during image creation.
-SYSTEMD_SERVICE:${PN} = "pir-mqtt.service"
+SYSTEMD_SERVICE:${PN} = "pir-mqtt.service pir-mqtt-time-sync.service"
 
 # Optional: Define RRECOMMENDS if there are other packages that are highly recommended
 # but not strictly required for the application to function.
@@ -73,4 +80,11 @@ SYSTEMD_SERVICE:${PN} = "pir-mqtt.service"
 # Optional: Specify dependencies for the runtime package.
 # This ensures that libmosquitto and libgpiod runtime libraries are included in the image
 # when this application is added.
-RDEPENDS:${PN} += "mosquitto libgpiod gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly opencv"
+RDEPENDS:${PN} += "mosquitto libgpiod sntp gstreamer1.0 gstreamer1.0-plugins-base gstreamer1.0-plugins-good gstreamer1.0-plugins-bad gstreamer1.0-plugins-ugly opencv"
+RDEPENDS:${PN} += "libcamera-gst libopencv-dnn gstreamer1.0-plugins-base-app \
+                   gstreamer1.0-plugins-base-videoconvertscale \
+                   gstreamer1.0-plugins-good-video4linux2 \
+                   gstreamer1.0-plugins-bad-videoparsersbad \
+                   gstreamer1.0-rtsp-server-rtspclientsink"
+
+FILES:${PN} += "${datadir}/pir-mqtt/yolo11n.onnx"

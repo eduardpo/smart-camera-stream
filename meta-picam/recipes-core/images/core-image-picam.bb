@@ -19,6 +19,8 @@ IMAGE_INSTALL:append = " \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
+    gstreamer1.0-rtsp-server-rtspclientsink \
+    raspi-utils \
     x264 \
     openssh \
     iw \
@@ -40,6 +42,8 @@ IMAGE_INSTALL:append = " \
     i2c-tools \
     mediamtx \
     tcpdump \
+    tzdata-core \
+    tzdata-asia \
 "
 
 # 3. Defensive Isolation: Hard block graphics at the image level

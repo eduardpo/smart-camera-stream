@@ -1,8 +1,8 @@
 [Unit]
 Description=PIR MQTT Motion Alert
 # Wants= is safe; if pir-mqtt crashes, mediamtx will remain completely unaffected
-After=network.target mediamtx.service
-Wants=mediamtx.service
+After=network.target network-online.target mediamtx.service pir-mqtt-time-sync.service
+Wants=mediamtx.service pir-mqtt-time-sync.service
 
 [Service]
 ExecStart=/usr/bin/pir_mqtt -c /etc/pir_mqtt/config.ini

@@ -5,6 +5,37 @@ set -eu
 if [ "$(id -u)" -eq 0 ]; then
     uid="${USER_ID:-1000}"
     gid="${GROUP_ID:-1000}"
+
+    case "$uid" in
+        ''|*[!0-9]*)
+            echo "Invalid host user ID: $uid" >&2
+            exit 1
+            ;;
+    esac
+    case "$gid" in
+        ''|*[!0-9]*)
+            echo "Invalid host group ID: $gid" >&2
+            exit 1
+            ;;
+    esac
+
+    if ! getent group "$gid" >/dev/null; then
+        group_name="host-${gid}"
+        while getent group "$group_name" >/dev/null; do
+            group_name="${group_name}x"
+        done
+        groupadd --gid "$gid" "$group_name"
+    fi
+
+    if ! getent passwd "$uid" >/dev/null; then
+        user_name="host-${uid}"
+        while getent passwd "$user_name" >/dev/null; do
+            user_name="${user_name}x"
+        done
+        useradd --uid "$uid" --gid "$gid" --no-create-home \
+            --home-dir "${HOME:-/tmp}" --shell /bin/sh "$user_name"
+    fi
+
     exec setpriv --reuid "$uid" --regid "$gid" --clear-groups kas "$@"
 fi
 
