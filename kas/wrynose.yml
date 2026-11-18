@@ -58,6 +58,7 @@ local_conf_header:
     PARALLEL_MAKE = "-j 4"
     INIT_MANAGER = "systemd"
     DISTRO_FEATURES:append = " systemd"
+    DEFAULT_TIMEZONE = "Asia/Jerusalem"
     VIRTUAL-RUNTIME_init_manager = "systemd"
     IMAGE_FEATURES += "ssh-server-openssh"
     EXTRA_IMAGE_FEATURES += "allow-empty-password allow-root-login empty-root-password post-install-logging"

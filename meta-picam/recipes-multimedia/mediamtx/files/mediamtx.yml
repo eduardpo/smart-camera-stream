@@ -18,16 +18,5 @@ srt: no
 # --- Paths ---
 paths:
   cam:
-    source: rpiCamera
-    sourceOnDemand: no
-
-    # FIX 1: Drop the resolution slightly to save encoding memory bandwidth
-    rpiCameraWidth: 1280
-    rpiCameraHeight: 720
-
-    # FIX 2: Lower the frame rate to drop the hardware workload by half
-    rpiCameraFPS: 15
-
-    # FIX 3: Force a modern profile configuration that browsers handle flawlessly
-    rpiCameraProfile: main
-    rpiCameraBitrate: 1500000
+    # pir_mqtt captures, annotates, and hardware-encodes the stream, then publishes it here.
+    source: publisher

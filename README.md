@@ -1,7 +1,7 @@
 #### This repo is derived from my Capstone Project:
 https://github.com/cu-ecen-aeld/final-project-eduardpo/wiki/Final-Project-Overview
 
-Added support for RTP/RTSP/WebRTC streaming, OpenCV software/hardware motion detection to complement infrared detection, core pir_mqtt app is now part of the custom layer.
+Added support for RTP/RTSP/WebRTC streaming, OpenCV motion detection to complement infrared detection, and the pir_mqtt app in the custom layer.
 
 - mqtt_motion_stream.py: mqtt listener managed by service firing gst-launch playback on received alert
 - mqtt-motion-stream.service: should be placed inside: *~/.config/systemd/user/*
@@ -36,18 +36,18 @@ From the repository root, build the container image once, then invoke the build:
 docker build -f kas/Dockerfile -t yocto-kas-wrynose:5.5 kas
 mkdir -p /mnt/data_ntfs/yocto-cache/downloads /mnt/data_ntfs/yocto-cache/ccache
 export KAS_CONTAINER_IMAGE=yocto-kas-wrynose:5.5
-export KAS_BUILD_DIR="$PWD/build_rpi"
-export DL_DIR=/downloads
+export KAS_BUILD_DIR="$(realpath -m "$PWD/../build_rpi")"
+export DL_DIR=/mnt/data_ntfs/yocto-cache/downloads
 kas-container \
-  --runtime-args "-v /mnt/data_ntfs/yocto-cache/downloads:/downloads -v /mnt/data_ntfs/yocto-cache/ccache:/ccache" \
+  --runtime-args "-v /mnt/data_ntfs/yocto-cache/ccache:/ccache" \
   build kas/wrynose.yml
 ```
 
 The image includes `kas/container-entrypoint`, which forwards the command from
-`kas-container` to kas inside Docker. If an older image produces
-`exec shell failed: No such file or directory`, rebuild the image with the
-`docker build` command above. You do not need to rebuild it for ordinary image
-builds.
+`kas-container` to kas inside Docker. Rebuild the image with the `docker build`
+command above whenever `kas/Dockerfile` or `kas/container-entrypoint` changes;
+the existing image is not updated automatically. You do not need to rebuild it
+for ordinary image builds.
 
 The last command is the actual image build: `kas-container` starts the configured
 Docker image, kas reads [`kas/wrynose.yml`](kas/wrynose.yml), and BitBake
@@ -78,9 +78,56 @@ ip -br address show wlan0
 journalctl -b -u wpa_supplicant@wlan0
 ```
 
-MediaMTX publishes the `cam` path only when its `rpiCamera` source detects a
-camera. If MediaMTX reports that the selected camera is unavailable, check
-camera detection before debugging RTSP, WebRTC, or OpenCV:
+`pir-mqtt-time-sync.service` makes a one-shot `sntp` request after the network
+is online and before `pir-mqtt` starts. It sets the system clock from
+`pool.ntp.org`; the image build sets the timezone to `Asia/Jerusalem`, so
+`date` displays local time after flashing. Check the sync result with
+`systemctl status pir-mqtt-time-sync`.
+
+`pir_mqtt` owns the camera through `libcamerasrc`, captures at 1280x720/15fps,
+and publishes the annotated H.264 stream to MediaMTX's `cam` path. MediaMTX
+uses `source: publisher`; it no longer opens the camera itself. The publisher
+uses GStreamer's `v4l2h264enc`, while a separate YOLO11n ONNX worker detects
+COCO people and cats, requiring confidence of at least 0.5 and matching boxes
+across two inference samples before drawing them. The host MQTT viewer continues
+to open the `cam` RTSP path when a motion event arrives; the stream itself
+remains live continuously. Motion alerts include confirmed labels as
+`motion_detected:cat,person` when available. If recognition finishes after the
+motion session starts, a follow-up alert adds the labels; alerts without a
+recognized object retain the legacy `motion_detected` payload. The host viewer
+accepts both formats.
+
+### `pir-mqtt` video and motion flow
+
+[![pir-mqtt video and motion pipeline](pir-mqtt-video-pipeline.svg)](pir-mqtt-video-pipeline.svg)
+
+The application separates motion/MQTT control (`pir_mqtt.cpp`) from camera
+capture, analytics, and publishing (`camera_analytics.cpp`). Their small shared
+interface is in `pir_mqtt.hpp`; the BitBake recipe compiles both modules into
+the same `pir_mqtt` executable.
+
+When snapshot saving is enabled, successful captures go into
+`/var/log/motion_snapshot` as date-indexed JPEGs (for example
+`2026-11-18_001.jpg`). The application removes the oldest indexed files after
+each capture to keep at most `maximum_snapshots` files (default 200), set in
+`/etc/pir_mqtt/config.ini`.
+
+The encoder output is constrained to H.264 Baseline, Level 4.0: without an
+explicit level, GStreamer's V4L2 encoder negotiates Level 1, which the
+Raspberry Pi hardware rejects at the configured 1280x720 resolution. Annotated
+BGR frames are converted to I420 in OpenCV before entering the encoder pipeline,
+avoiding a GStreamer `videoconvert` output-pool activation failure in the
+appsrc-based publisher path.
+
+The recipe installs the tested model at
+`/usr/share/pir-mqtt/yolo11n.onnx`. Camera dimensions/FPS and model path,
+inference interval, confidence threshold, and NMS threshold can be adjusted
+in `/etc/pir_mqtt/config.ini`. If the hardware encoder, camera source, or
+MediaMTX publisher path cannot start, `pir_mqtt` logs the GStreamer error and
+exits rather than silently switching to software encoding.
+
+If camera capture fails, check camera detection before debugging RTSP,
+WebRTC, or the analytics pipeline:
 
 ```sh
 rpicam-hello --list-cameras
@@ -113,6 +160,7 @@ kas-container \
   shell kas/wrynose.yml
 ```
 
-Exit the shell with `exit` or Ctrl+D. The container entrypoint forwards kas
-commands and runs them with the invoking host user's UID and GID so files
-created in the mounted work and cache directories remain accessible.
+Exit the shell with `exit` or Ctrl+D. The container entrypoint creates named
+passwd/group entries for the invoking host UID/GID when needed, then runs kas
+with those IDs. This keeps files in mounted work/cache directories host-owned
+and lets tools such as `scp` resolve the container user's numeric ID.

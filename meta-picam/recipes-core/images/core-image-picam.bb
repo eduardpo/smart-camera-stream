@@ -15,20 +15,25 @@ IMAGE_INSTALL:append = " \
     gstreamer1.0-plugins-base-app \
     gstreamer1.0-plugins-base-videoconvertscale \
     gstreamer1.0-plugins-good \
+    gstreamer1.0-plugins-good-video4linux2 \
     gstreamer1.0-plugins-bad \
     gstreamer1.0-plugins-ugly \
     gstreamer1.0-libav \
+    gstreamer1.0-rtsp-server-rtspclientsink \
+    raspi-utils \
     x264 \
     openssh \
     iw \
     kernel-module-brcmfmac-cyw \
     kernel-module-brcmfmac \
+    kernel-module-bcm2835-codec \
     kernel-module-bcm2835-isp \
     kernel-module-bcm2835-unicam-legacy \
     kernel-module-i2c-mux-pinctrl \
     linux-firmware-rpidistro-bcm43455 \
     wpa-supplicant \
     opencv \
+    libopencv-dnn \
     mosquitto \
     mosquitto-clients \
     libgpiod \
@@ -37,6 +42,8 @@ IMAGE_INSTALL:append = " \
     i2c-tools \
     mediamtx \
     tcpdump \
+    tzdata-core \
+    tzdata-asia \
 "
 
 # 3. Defensive Isolation: Hard block graphics at the image level

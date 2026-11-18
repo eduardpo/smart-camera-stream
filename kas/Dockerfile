@@ -14,7 +14,7 @@ RUN apt-get update \
         xz-utils debianutils iputils-ping python3-git python3-jinja2 \
         libegl1-mesa libsdl1.2-dev xterm file locales \
         zstd lz4 rsync bc bison flex libssl-dev \
-        ca-certificates sudo vim nano less curl ccache tmux util-linux \
+        ca-certificates sudo vim nano less curl ccache tmux util-linux passwd \
     && rm -rf /var/lib/apt/lists/*
 
 RUN locale-gen en_US.UTF-8 \

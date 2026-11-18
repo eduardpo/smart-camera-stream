@@ -1,0 +1,115 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1600" height="760" viewBox="0 0 1600 760" role="img" aria-labelledby="title description">
+  <title id="title">pir-mqtt video and motion pipeline</title>
+  <desc id="description">GStreamer supplies BGR camera frames to the frame loop and OpenCV motion detector. YOLO inference supplies object labels for annotation. Annotated video is hardware encoded and published over RTSP. Motion alerts and optional snapshots run alongside video.</desc>
+  <defs>
+    <marker id="arrow" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#526579"/>
+    </marker>
+    <marker id="arrow-blue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#2563a6"/>
+    </marker>
+    <marker id="arrow-green" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+      <path d="M0,0 L10,4 L0,8 Z" fill="#23804a"/>
+    </marker>
+    <style>
+      text { font-family: sans-serif; fill: #172b3a; }
+      .title { font-size: 30px; font-weight: 700; }
+      .section { font-size: 18px; font-weight: 700; letter-spacing: 1px; }
+      .label { font-size: 18px; font-weight: 700; }
+      .detail { font-size: 15px; }
+      .note { font-size: 14px; fill: #435668; }
+      .box { fill: #fff; stroke: #62788a; stroke-width: 2; rx: 12; }
+      .gstreamer { fill: #eaf3ff; stroke: #2563a6; stroke-width: 2; rx: 12; }
+      .analytics { fill: #eef8f0; stroke: #23804a; stroke-width: 2; rx: 12; }
+      .alert { fill: #fff6e8; stroke: #b66a12; stroke-width: 2; rx: 12; }
+      .line { fill: none; stroke: #526579; stroke-width: 3; marker-end: url(#arrow); }
+      .blue-line { fill: none; stroke: #2563a6; stroke-width: 3; marker-end: url(#arrow-blue); }
+      .green-line { fill: none; stroke: #23804a; stroke-width: 3; marker-end: url(#arrow-green); }
+      .optional { fill: none; stroke: #b66a12; stroke-width: 2.5; stroke-dasharray: 8 7; marker-end: url(#arrow); }
+    </style>
+  </defs>
+
+  <rect width="1600" height="760" fill="#f7f9fc"/>
+  <text x="50" y="52" class="title">pir-mqtt video and motion pipeline</text>
+  <text x="50" y="91" class="section" fill="#2563a6">VIDEO — CONTINUOUS STREAM</text>
+
+  <rect x="45" y="125" width="155" height="100" class="box"/>
+  <text x="122" y="165" text-anchor="middle" class="label">Pi camera</text>
+  <text x="122" y="192" text-anchor="middle" class="detail">live frames</text>
+
+  <rect x="245" y="110" width="310" height="130" class="gstreamer"/>
+  <text x="400" y="143" text-anchor="middle" class="label">GStreamer capture</text>
+  <text x="400" y="174" text-anchor="middle" class="detail">libcamerasrc → videoconvert</text>
+  <text x="400" y="200" text-anchor="middle" class="detail">BGR appsink (drops stale frames)</text>
+
+  <rect x="605" y="125" width="190" height="100" class="box"/>
+  <text x="700" y="164" text-anchor="middle" class="label">Frame loop</text>
+  <text x="700" y="192" text-anchor="middle" class="detail">frames + detection labels</text>
+
+  <rect x="850" y="125" width="180" height="100" class="analytics"/>
+  <text x="940" y="164" text-anchor="middle" class="label">Annotate</text>
+  <text x="940" y="192" text-anchor="middle" class="detail">draw confirmed boxes</text>
+
+  <rect x="1085" y="100" width="315" height="150" class="gstreamer"/>
+  <text x="1242" y="133" text-anchor="middle" class="label">GStreamer publish</text>
+  <text x="1242" y="164" text-anchor="middle" class="detail">appsrc → leaky queue</text>
+  <text x="1242" y="190" text-anchor="middle" class="detail">v4l2h264enc → h264parse</text>
+  <text x="1242" y="216" text-anchor="middle" class="detail">rtspclientsink (TCP)</text>
+
+  <rect x="1450" y="125" width="125" height="100" class="box"/>
+  <text x="1512" y="164" text-anchor="middle" class="label">MediaMTX</text>
+  <text x="1512" y="192" text-anchor="middle" class="detail">/cam</text>
+
+  <path d="M200 175 H245" class="line"/>
+  <path d="M555 175 H605" class="blue-line"/>
+  <path d="M795 175 H850" class="blue-line"/>
+  <path d="M1030 175 H1085" class="blue-line"/>
+  <path d="M1400 175 H1450" class="blue-line"/>
+
+  <rect x="1430" y="285" width="165" height="80" class="box"/>
+  <text x="1512" y="319" text-anchor="middle" class="label">RTSP viewers</text>
+  <text x="1512" y="344" text-anchor="middle" class="detail">stream stays live</text>
+  <path d="M1512 225 V285" class="line"/>
+
+  <rect x="605" y="300" width="220" height="105" class="analytics"/>
+  <text x="715" y="339" text-anchor="middle" class="label">Async YOLO11n</text>
+  <text x="715" y="367" text-anchor="middle" class="detail">person + cat inference</text>
+  <text x="715" y="390" text-anchor="middle" class="detail">confirm across 2 samples</text>
+  <path d="M700 225 V270 Q700 285 715 300" class="green-line"/>
+  <path d="M825 352 H875 V225" class="green-line"/>
+
+  <rect x="245" y="300" width="270" height="105" class="analytics"/>
+  <text x="380" y="339" text-anchor="middle" class="label">OpenCV motion detection</text>
+  <text x="380" y="367" text-anchor="middle" class="detail">analyzes captured BGR frames</text>
+  <text x="380" y="390" text-anchor="middle" class="detail">produces motion events</text>
+  <path d="M650 225 V270 H380 V300" class="green-line"/>
+
+  <text x="50" y="464" class="section" fill="#23804a">MOTION, ALERTS, AND OPTIONAL SNAPSHOTS</text>
+  <rect x="245" y="495" width="270" height="105" class="box"/>
+  <text x="380" y="534" text-anchor="middle" class="label">PIR sensor input</text>
+  <text x="380" y="562" text-anchor="middle" class="detail">alternative motion source</text>
+  <text x="380" y="585" text-anchor="middle" class="detail">when motion_source=pir</text>
+
+  <rect x="605" y="495" width="250" height="105" class="alert"/>
+  <text x="730" y="535" text-anchor="middle" class="label">Session tracker</text>
+  <text x="730" y="565" text-anchor="middle" class="detail">debounce + confirm motion</text>
+
+  <rect x="945" y="495" width="210" height="105" class="alert"/>
+  <text x="1050" y="535" text-anchor="middle" class="label">MQTT alert</text>
+  <text x="1050" y="565" text-anchor="middle" class="detail">with detected labels</text>
+
+  <rect x="1225" y="485" width="350" height="135" class="gstreamer"/>
+  <text x="1400" y="519" text-anchor="middle" class="label">Optional snapshot</text>
+  <text x="1400" y="548" text-anchor="middle" class="detail">read /cam → rtspsrc / depay / parse</text>
+  <text x="1400" y="573" text-anchor="middle" class="detail">v4l2h264dec → jpegenc</text>
+  <text x="1400" y="598" text-anchor="middle" class="detail">dated JPEG; retention from config</text>
+
+  <path d="M380 405 V455 H560 V520 H605" class="green-line"/>
+  <path d="M515 547 H605" class="line"/>
+  <path d="M855 547 H945" class="line"/>
+  <path d="M855 570 H1060 V620 H1225" class="optional"/>
+  <path d="M1512 365 V435 H1400 V485" class="optional"/>
+
+  <text x="50" y="670" class="note">OpenCV analyzes camera frames when motion_source=opencv; otherwise PIR supplies motion events.</text>
+  <text x="50" y="698" class="note">Video publishing runs continuously, independently of motion events. Snapshot capture is triggered after motion confirmation when enabled.</text>
+</svg>

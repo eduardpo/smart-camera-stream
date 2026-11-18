@@ -12,3 +12,5 @@
 
 FILESEXTRAPATHS:prepend := "${THISDIR}/files:"
 SRC_URI += "file://imx219.cfg"
+
+KERNEL_MODULE_AUTOLOAD:append = " bcm2835-codec"

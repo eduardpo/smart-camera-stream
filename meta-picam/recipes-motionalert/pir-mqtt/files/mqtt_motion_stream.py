@@ -23,11 +23,9 @@ import paho.mqtt.client as mqtt
 MQTT_BROKER = "localhost"   # mosquitto runs on this PC (pir_mqtt.cpp connects out to it)
 MQTT_TOPIC = "pir/motion"
 
-# MediaMTX runs on the Pi with source: rpiCamera in its path config -- it
-# drives the camera itself and the RTSP feed is *always* live, independent
-# of motion state. That means there's no publisher-not-ready race to guard
-# against here anymore: as soon as motion_detected arrives, the stream is
-# already there to pull. Set this to the Pi's real LAN IP.
+# pir_mqtt continuously publishes its annotated camera stream to MediaMTX;
+# this host-side service only opens the RTSP viewer while motion is active.
+# Set this to the Pi's real LAN IP.
 RASPBERRY_PI_HOST = "192.168.1.3"
 RTSP_PORT = 8554
 RTSP_PATH = "cam"
@@ -107,7 +105,10 @@ def on_message(client, userdata, msg):
     payload = msg.payload.decode()
     logger.info(f"MQTT: {msg.topic} = {payload}")
 
-    if payload == "motion_detected":
+    if payload == "motion_detected" or payload.startswith("motion_detected:"):
+        labels = payload.partition(":")[2]
+        if labels:
+            logger.info(f"Detected labels: {labels}")
         start_gstreamer()
     elif payload == "motion_waiting":
         stop_gstreamer()
